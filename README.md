@@ -1,4 +1,4 @@
-﻿# Repo for CLIP-ReID - Animal Re-Identification Experiments
+﻿# Repo for CLIP-ReID - Animal Re-Identification Baseline Experiments
 
 ## CLIP-ReID: Exploiting Vision-Language Model for Image Re-Identification without Concrete Text Labels [[pdf]](https://arxiv.org/pdf/2211.13977.pdf)
  [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/clip-reid-exploiting-vision-language-model/person-re-identification-on-msmt17)](https://paperswithcode.com/sota/person-re-identification-on-msmt17?p=clip-reid-exploiting-vision-language-model)
