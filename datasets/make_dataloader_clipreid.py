@@ -12,6 +12,12 @@ from .polarbear import PolarBear
 from .seastar import SeaStar
 from .stoat import STOAT
 
+from .penguin import PENGUIN
+from .pukeko import PUKEKO
+from .hare import HARE
+from .deer import DEER
+from .wallaby import WALLABY
+
 from .bases import ImageDataset
 from timm.data.random_erasing import RandomErasing
 from .sampler import RandomIdentitySampler
@@ -27,7 +33,13 @@ __factory = {
     'nyala' : Nyala, 
     'polarbear' : PolarBear, 
     'seastar' : SeaStar, 
-    'stoat' : STOAT
+    'stoat' : STOAT,
+    
+    'penguin' : PENGUIN,
+    'pukeko' : PUKEKO,
+    'hare' : HARE,
+    'deer' : DEER,
+    'wallaby' : WALLABY
 }
 
 def train_collate_fn(batch):

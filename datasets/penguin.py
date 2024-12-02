@@ -3,18 +3,18 @@ import re
 import os.path as osp
 from .bases import BaseImageDataset
 
-class STOAT(BaseImageDataset):
+class PENGUIN(BaseImageDataset):
     """
-    STOAT Dataset
+    PENGUIN Dataset
     
     File format:
-    animalID_cameraID_number_others.JPG
-    e.g. 0_Doc-ZIO-SL169_0_19d05015-8ddf-479d-989f-6dfdac33bf9f.JPG
+    animalID_cameraID_number_others.jpg
+    e.g. 0_Doc-AIV-DCAMG01_0_00DA4ECE-9A33-4D01-A020-1777D81B0CC7_000001.jpg
     """
-    dataset_dir = "Stoat"
+    dataset_dir = "Penguin"
 
     def __init__(self, root='', verbose=True, pid_begin=0, **kwargs):
-        super(STOAT, self).__init__()
+        super(PENGUIN, self).__init__()
         self.dataset_dir = osp.join(root, self.dataset_dir)
         self.train_dir = osp.join(self.dataset_dir, 'train')
         self.query_dir = osp.join(self.dataset_dir, 'query')
@@ -29,7 +29,7 @@ class STOAT(BaseImageDataset):
         gallery = self._process_dir(self.gallery_dir, relabel=False)
 
         if verbose:
-            print("=> Deer loaded")
+            print("=> Penguin loaded")
             self.print_dataset_statistics(train, query, gallery)
 
         self.train = train
@@ -63,7 +63,7 @@ class STOAT(BaseImageDataset):
         img_paths = glob.glob(osp.join(dir_path, '*.JPG'))
         img_paths.extend(glob.glob(osp.join(dir_path, '*.jpg')))  # Handle both upper and lower case extensions
         
-        # Pattern matches: animalID_cameraID_number_others.JPG
+        # Pattern matches: animalID_cameraID_number_others.jpg
         pattern = re.compile(r'(\d+)_([A-Za-z0-9-]+)_\d+')
         
         # First pass: collect all PIDs and camera IDs

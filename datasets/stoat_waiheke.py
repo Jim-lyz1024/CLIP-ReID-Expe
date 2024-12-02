@@ -1,15 +1,15 @@
 import glob
 import re
+
 import os.path as osp
+
 from .bases import BaseImageDataset
+from collections import defaultdict
+import pickle
 
 class STOAT(BaseImageDataset):
     """
-    STOAT Dataset
-    
-    File format:
-    animalID_cameraID_number_others.JPG
-    e.g. 0_Doc-ZIO-SL169_0_19d05015-8ddf-479d-989f-6dfdac33bf9f.JPG
+    Updated Stoat Dataset with new format
     """
     dataset_dir = "Stoat"
 
@@ -22,21 +22,18 @@ class STOAT(BaseImageDataset):
 
         self._check_before_run()
         self.pid_begin = pid_begin
-        
-        # Process each subset
         train = self._process_dir(self.train_dir, relabel=True)
         query = self._process_dir(self.query_dir, relabel=False)
         gallery = self._process_dir(self.gallery_dir, relabel=False)
 
         if verbose:
-            print("=> Deer loaded")
+            print("=> Stoat loaded")
             self.print_dataset_statistics(train, query, gallery)
 
         self.train = train
         self.query = query
         self.gallery = gallery
 
-        # Calculate dataset statistics
         self.num_train_pids, self.num_train_imgs, self.num_train_cams, self.num_train_vids = self.get_imagedata_info(self.train)
         self.num_query_pids, self.num_query_imgs, self.num_query_cams, self.num_query_vids = self.get_imagedata_info(self.query)
         self.num_gallery_pids, self.num_gallery_imgs, self.num_gallery_cams, self.num_gallery_vids = self.get_imagedata_info(self.gallery)
@@ -53,20 +50,9 @@ class STOAT(BaseImageDataset):
             raise RuntimeError("'{}' is not available".format(self.gallery_dir))
 
     def _process_dir(self, dir_path, relabel=False):
-        """Process one directory with image data.
-        
-        Args:
-            dir_path (str): Directory path.
-            relabel (bool): If True, relabel the IDs for training set.
-        """
-        # Get image list
-        img_paths = glob.glob(osp.join(dir_path, '*.JPG'))
-        img_paths.extend(glob.glob(osp.join(dir_path, '*.jpg')))  # Handle both upper and lower case extensions
-        
-        # Pattern matches: animalID_cameraID_number_others.JPG
-        pattern = re.compile(r'(\d+)_([A-Za-z0-9-]+)_\d+')
-        
-        # First pass: collect all PIDs and camera IDs
+        img_paths = glob.glob(osp.join(dir_path, '*.jpg'))
+        pattern = re.compile(r'(\d+)_([A-Za-z0-9-]+)_(\d+)')
+
         pid_container = set()
         camid_container = set()
         
@@ -74,15 +60,13 @@ class STOAT(BaseImageDataset):
             basename = osp.basename(img_path)
             match = pattern.match(basename)
             if match:
-                pid = int(match.group(1))  # Animal ID
-                camid = hash(match.group(2)) % 10000  # Hash camera ID to numeric value
+                pid = int(match.group(1))
+                camid = hash(match.group(2)) % 10000  # Convert camera string to numeric ID
                 pid_container.add(pid)
                 camid_container.add(camid)
 
-        # Generate new labels for training set
         pid2label = {pid: label for label, pid in enumerate(pid_container)}
 
-        # Second pass: build dataset list
         dataset = []
         for img_path in sorted(img_paths):
             basename = osp.basename(img_path)
@@ -91,12 +75,9 @@ class STOAT(BaseImageDataset):
                 pid = int(match.group(1))
                 camid = hash(match.group(2)) % 10000
                 
-                # Relabel PIDs for training set
                 if relabel:
                     pid = pid2label[pid]
                 
-                # Final format: (img_path, pid, camid, trackid)
-                # trackid is set to 0 as it's not used in this dataset
                 dataset.append((img_path, self.pid_begin + pid, camid, 0))
 
         return dataset

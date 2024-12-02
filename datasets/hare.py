@@ -3,18 +3,18 @@ import re
 import os.path as osp
 from .bases import BaseImageDataset
 
-class STOAT(BaseImageDataset):
+class HARE(BaseImageDataset):
     """
-    STOAT Dataset
+    HARE Dataset
     
     File format:
     animalID_cameraID_number_others.JPG
     e.g. 0_Doc-ZIO-SL169_0_19d05015-8ddf-479d-989f-6dfdac33bf9f.JPG
     """
-    dataset_dir = "Stoat"
+    dataset_dir = "Hare"
 
     def __init__(self, root='', verbose=True, pid_begin=0, **kwargs):
-        super(STOAT, self).__init__()
+        super(HARE, self).__init__()
         self.dataset_dir = osp.join(root, self.dataset_dir)
         self.train_dir = osp.join(self.dataset_dir, 'train')
         self.query_dir = osp.join(self.dataset_dir, 'query')
@@ -29,7 +29,7 @@ class STOAT(BaseImageDataset):
         gallery = self._process_dir(self.gallery_dir, relabel=False)
 
         if verbose:
-            print("=> Deer loaded")
+            print("=> Hare loaded")
             self.print_dataset_statistics(train, query, gallery)
 
         self.train = train
@@ -63,12 +63,17 @@ class STOAT(BaseImageDataset):
         img_paths = glob.glob(osp.join(dir_path, '*.JPG'))
         img_paths.extend(glob.glob(osp.join(dir_path, '*.jpg')))  # Handle both upper and lower case extensions
         
+        print(f"\nProcessing directory: {dir_path}")
+        print(f"Total files found: {len(img_paths)}")
+        
         # Pattern matches: animalID_cameraID_number_others.JPG
         pattern = re.compile(r'(\d+)_([A-Za-z0-9-]+)_\d+')
         
         # First pass: collect all PIDs and camera IDs
         pid_container = set()
         camid_container = set()
+        
+        unmatched_files = []
         
         for img_path in sorted(img_paths):
             basename = osp.basename(img_path)
@@ -78,6 +83,13 @@ class STOAT(BaseImageDataset):
                 camid = hash(match.group(2)) % 10000  # Hash camera ID to numeric value
                 pid_container.add(pid)
                 camid_container.add(camid)
+            else:
+                unmatched_files.append(basename)
+
+        if unmatched_files:
+            print(f"\nWarning: {len(unmatched_files)} files did not match the pattern:")
+            for f in unmatched_files[:1000]:  # Print first 10 unmatched files
+                print(f"  - {f}")
 
         # Generate new labels for training set
         pid2label = {pid: label for label, pid in enumerate(pid_container)}

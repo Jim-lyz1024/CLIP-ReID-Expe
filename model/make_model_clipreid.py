@@ -216,7 +216,25 @@ class PromptLearner(nn.Module):
             ctx_init = "A photo of a X X X X nyala."
            
         elif dataset_name == "polarbear":
-            ctx_init = "A photo of a X X X X polarbear."    
+            ctx_init = "A photo of a X X X X polarbear."  
+            
+        elif dataset_name == "penguin":
+            ctx_init = "A photo of a X X X X penguin."
+        
+        elif dataset_name == "pukeko":
+            ctx_init = "A photo of a X X X X pukeko."
+            
+        elif dataset_name == "hare":
+            ctx_init = "A photo of a X X X X hare."
+            
+        elif dataset_name == "deer":
+            ctx_init = "A photo of a X X X X deer."
+            
+        elif dataset_name == "wallaby":
+            ctx_init = "A photo of a X X X X wallaby."
+            
+        else:
+            raise ValueError(f"Unknown dataset {dataset_name}")  
             
             
         ctx_dim = 512

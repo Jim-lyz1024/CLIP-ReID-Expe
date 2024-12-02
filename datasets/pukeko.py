@@ -3,18 +3,18 @@ import re
 import os.path as osp
 from .bases import BaseImageDataset
 
-class STOAT(BaseImageDataset):
+class PUKEKO(BaseImageDataset):
     """
-    STOAT Dataset
+    PUKEKO Dataset
     
     File format:
     animalID_cameraID_number_others.JPG
     e.g. 0_Doc-ZIO-SL169_0_19d05015-8ddf-479d-989f-6dfdac33bf9f.JPG
     """
-    dataset_dir = "Stoat"
+    dataset_dir = "Pukeko"
 
     def __init__(self, root='', verbose=True, pid_begin=0, **kwargs):
-        super(STOAT, self).__init__()
+        super(PUKEKO, self).__init__()
         self.dataset_dir = osp.join(root, self.dataset_dir)
         self.train_dir = osp.join(self.dataset_dir, 'train')
         self.query_dir = osp.join(self.dataset_dir, 'query')
@@ -29,7 +29,7 @@ class STOAT(BaseImageDataset):
         gallery = self._process_dir(self.gallery_dir, relabel=False)
 
         if verbose:
-            print("=> Deer loaded")
+            print("=> Pukeko loaded")
             self.print_dataset_statistics(train, query, gallery)
 
         self.train = train
