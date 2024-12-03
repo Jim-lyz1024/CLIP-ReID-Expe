@@ -18,6 +18,8 @@ from .hare import HARE
 from .deer import DEER
 from .wallaby import WALLABY
 
+from .combined_animals import CombinedAnimals
+
 from .bases import ImageDataset
 from timm.data.random_erasing import RandomErasing
 from .sampler import RandomIdentitySampler
@@ -39,7 +41,9 @@ __factory = {
     'pukeko' : PUKEKO,
     'hare' : HARE,
     'deer' : DEER,
-    'wallaby' : WALLABY
+    'wallaby' : WALLABY,
+    
+    'combined_animals': CombinedAnimals
 }
 
 def train_collate_fn(batch):
@@ -78,7 +82,55 @@ def make_dataloader(cfg):
 
     num_workers = cfg.DATALOADER.NUM_WORKERS
 
-    dataset = __factory[cfg.DATASETS.NAMES](root=cfg.DATASETS.ROOT_DIR)
+    # dataset = __factory[cfg.DATASETS.NAMES](root=cfg.DATASETS.ROOT_DIR)
+    if cfg.DATASETS.NAMES == 'combined_animals':
+        print("\nInitializing training dataset...")
+        train_dataset = __factory[cfg.DATASETS.NAMES](root=cfg.DATASETS.ROOT_DIR, mode='train')
+        print("\nInitializing validation dataset...")
+        val_dataset = __factory[cfg.DATASETS.NAMES](root=cfg.DATASETS.ROOT_DIR, mode='val')
+        
+        train_set = ImageDataset(train_dataset.train, train_transforms)
+        train_set_normal = ImageDataset(train_dataset.train, val_transforms)
+        val_set = ImageDataset(val_dataset.query + val_dataset.gallery, val_transforms)
+        
+        num_classes = train_dataset.num_train_pids
+        cam_num = train_dataset.num_train_cams
+        view_num = train_dataset.num_train_vids
+        
+        # Create data loaders
+        if 'triplet' in cfg.DATALOADER.SAMPLER:
+            if cfg.MODEL.DIST_TRAIN:
+                print('DIST_TRAIN START')
+                mini_batch_size = cfg.SOLVER.STAGE2.IMS_PER_BATCH // dist.get_world_size()
+                data_sampler = RandomIdentitySampler_DDP(train_dataset.train, cfg.SOLVER.STAGE2.IMS_PER_BATCH, cfg.DATALOADER.NUM_INSTANCE)
+                batch_sampler = torch.utils.data.sampler.BatchSampler(data_sampler, mini_batch_size, True)
+                train_loader_stage2 = torch.utils.data.DataLoader(
+                    train_set,
+                    num_workers=num_workers,
+                    batch_sampler=batch_sampler,
+                    collate_fn=train_collate_fn,
+                    pin_memory=True,
+                )
+            else:
+                train_loader_stage2 = DataLoader(
+                    train_set, batch_size=cfg.SOLVER.STAGE2.IMS_PER_BATCH,
+                    sampler=RandomIdentitySampler(train_dataset.train, cfg.SOLVER.STAGE2.IMS_PER_BATCH, cfg.DATALOADER.NUM_INSTANCE),
+                    num_workers=num_workers, collate_fn=train_collate_fn
+                )
+        
+        train_loader_stage1 = DataLoader(
+            train_set_normal, batch_size=cfg.SOLVER.STAGE1.IMS_PER_BATCH, shuffle=True,
+            num_workers=num_workers, collate_fn=train_collate_fn
+        )
+        
+        val_loader = DataLoader(
+            val_set, batch_size=cfg.TEST.IMS_PER_BATCH, shuffle=False,
+            num_workers=num_workers, collate_fn=val_collate_fn
+        )
+        
+        return train_loader_stage2, train_loader_stage1, val_loader, len(val_dataset.query), num_classes, cam_num, view_num
+    else:
+        dataset = __factory[cfg.DATASETS.NAMES](root=cfg.DATASETS.ROOT_DIR)
     
     train_set = ImageDataset(dataset.train, train_transforms)
     train_set_normal = ImageDataset(dataset.train, val_transforms)
