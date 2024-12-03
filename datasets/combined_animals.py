@@ -72,16 +72,6 @@ class CombinedAnimals(BaseImageDataset):
         img_paths.extend(glob.glob(osp.join(dir_path, '*.JPG')))
         
         print(f"Number of images found: {len(img_paths)}")
-        
-        if len(img_paths) == 0:
-            print(f"WARNING: No images found in {dir_path}")
-            # List directory contents for debugging
-            try:
-                print("Directory contents:")
-                print(os.listdir(dir_path))
-            except Exception as e:
-                print(f"Error reading directory: {e}")
-        
         dataset = []
         pid_container = set()
         camid_container = set()
@@ -95,11 +85,10 @@ class CombinedAnimals(BaseImageDataset):
                 camid = hash(match.group(2)) % 10000
                 pid_container.add(pid)
                 camid_container.add(camid)
-            else:
-                print(f"WARNING: File name did not match pattern: {basename}")
         
         print(f"Found {len(pid_container)} unique PIDs")
         print(f"Found {len(camid_container)} unique camera IDs")
+        print(f"PIDs found: {sorted(list(pid_container))}")
         
         # Second pass to build dataset list
         for img_path in sorted(img_paths):
@@ -118,6 +107,7 @@ class CombinedAnimals(BaseImageDataset):
         print("\nProcessing training directories...")
         train_data = []
         pid_container = set()
+        pid_count = 0  # Debug counter
         
         train_dirs = [
             osp.join(self.deer_dir, 'train'),
@@ -128,19 +118,30 @@ class CombinedAnimals(BaseImageDataset):
         for animal_dir in train_dirs:
             print(f"\nProcessing training directory: {animal_dir}")
             data = self._process_dir(animal_dir)
-            train_data.extend(data)
+            
+            # Debug: Print original PIDs
+            orig_pids = set([pid for _, pid, _, _ in data])
+            print(f"Original PIDs in {os.path.basename(os.path.dirname(animal_dir))}: {sorted(list(orig_pids))}")
+            
+            # Relabel PIDs for this animal to avoid conflicts
+            animal_pid2label = {pid: pid_count + idx for idx, pid in enumerate(sorted(list(orig_pids)))}
+            data = [(img_path, animal_pid2label[pid], camid, trackid) 
+                    for img_path, pid, camid, trackid in data]
+            
+            # Debug: Print relabeled PIDs
             new_pids = set([pid for _, pid, _, _ in data])
+            print(f"Relabeled PIDs: {sorted(list(new_pids))}")
+            
+            train_data.extend(data)
             pid_container.update(new_pids)
-            print(f"Added {len(new_pids)} new PIDs from {os.path.basename(os.path.dirname(animal_dir))}")
-        
-        # Relabel PIDs to be continuous
-        pid2label = {pid: label for label, pid in enumerate(pid_container)}
-        train_data = [(img_path, pid2label[pid], camid, trackid) 
-                    for img_path, pid, camid, trackid in train_data]
+            pid_count += len(orig_pids)
+            
+            print(f"Added {len(orig_pids)} new PIDs from {os.path.basename(os.path.dirname(animal_dir))}")
         
         print(f"\nTotal training statistics:")
         print(f"Total images: {len(train_data)}")
-        print(f"Total PIDs: {len(pid_container)}")
+        print(f"Total unique PIDs: {len(pid_container)}")
+        print(f"All PIDs: {sorted(list(pid_container))}")
         
         return train_data
 
@@ -150,16 +151,36 @@ class CombinedAnimals(BaseImageDataset):
         validation_data = []
         
         val_dirs = [
-            osp.join(self.stoat_dir, mode),
-            osp.join(self.pukeko_dir, mode),
-            osp.join(self.wallaby_dir, mode)
+            (self.stoat_dir, 'stoat'),
+            (self.pukeko_dir, 'pukeko'),
+            (self.wallaby_dir, 'wallaby')
         ]
         
-        for animal_dir in val_dirs:
-            print(f"\nProcessing {mode} directory: {animal_dir}")
-            data = self._process_dir(animal_dir)
+        for animal_dir, animal_name in val_dirs:
+            dir_path = osp.join(animal_dir, mode)
+            print(f"\nProcessing {mode} directory for {animal_name}: {dir_path}")
+            data = self._process_dir(dir_path)
+            
+            # Keep original PIDs for each species
+            # Just add a large offset to avoid any possible overlap
+            if animal_name == 'stoat':
+                offset = 10000
+            elif animal_name == 'pukeko':
+                offset = 20000
+            else:  # wallaby
+                offset = 30000
+                
+            # Add offset to original PIDs to keep them separate
+            data = [(img_path, pid + offset, camid, trackid) 
+                    for img_path, pid, camid, trackid in data]
+            
             validation_data.extend(data)
-            print(f"Added {len(data)} images from {os.path.basename(os.path.dirname(animal_dir))}")
+            
+            # Debug info
+            pids = set([pid for _, pid, _, _ in data])
+            print(f"Added {len(data)} images from {animal_name}")
+            print(f"Number of unique {animal_name} IDs: {len(pids)}")
+            print(f"ID range: {min(pids)} to {max(pids)}")
         
         print(f"\nTotal {mode} validation statistics:")
         print(f"Total images: {len(validation_data)}")

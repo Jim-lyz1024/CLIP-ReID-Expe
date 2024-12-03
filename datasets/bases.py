@@ -30,17 +30,30 @@ class BaseDataset(object):
 
     def get_imagedata_info(self, data):
         pids, cams, tracks = [], [], []
+        # Print for debugging
+        print("\nDebug get_imagedata_info:")
+        print(f"Data length: {len(data)}")
+        
         for _, pid, camid, trackid in data:
             pids += [pid]
             cams += [camid]
             tracks += [trackid]
+        
+        # Convert to sets to get unique values
         pids = set(pids)
         cams = set(cams)
         tracks = set(tracks)
+        
+        # Print for debugging
+        print(f"Unique PIDs found: {len(pids)}")
+        print(f"Unique CAMs found: {len(cams)}")
+        print(f"PIDs: {sorted(list(pids))}")
+        
         num_pids = len(pids)
         num_cams = len(cams)
         num_imgs = len(data)
         num_views = len(tracks)
+        
         return num_pids, num_imgs, num_cams, num_views
 
     def print_dataset_statistics(self):
