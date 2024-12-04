@@ -19,14 +19,14 @@ class CombinedAnimals(BaseImageDataset):
         self.mode = mode
 
         # Training animals
-        self.deer_dir = osp.join(root, "Deer")
-        self.hare_dir = osp.join(root, "Hare")
-        self.penguin_dir = osp.join(root, "Penguin")
+        self.deer_dir = osp.join(root, "Deer_Gen")
+        self.hare_dir = osp.join(root, "Hare_Gen")
+        self.penguin_dir = osp.join(root, "Penguin_Gen")
 
         # Validation animals 
-        self.stoat_dir = osp.join(root, "Stoat")
-        self.pukeko_dir = osp.join(root, "Pukeko") 
-        self.wallaby_dir = osp.join(root, "Wallaby")
+        self.stoat_dir = osp.join(root, "Stoat_Gen")
+        self.pukeko_dir = osp.join(root, "Pukeko_Gen") 
+        self.wallaby_dir = osp.join(root, "Wallaby_Gen")
 
         self._check_before_run()
         self.pid_begin = pid_begin
@@ -151,9 +151,9 @@ class CombinedAnimals(BaseImageDataset):
         validation_data = []
         
         val_dirs = [
-            (self.stoat_dir, 'stoat'),
+            # (self.stoat_dir, 'stoat'),
             (self.pukeko_dir, 'pukeko'),
-            (self.wallaby_dir, 'wallaby')
+            # (self.wallaby_dir, 'wallaby')
         ]
         
         for animal_dir, animal_name in val_dirs:
