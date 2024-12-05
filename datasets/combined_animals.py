@@ -151,8 +151,8 @@ class CombinedAnimals(BaseImageDataset):
         validation_data = []
         
         val_dirs = [
-            # (self.stoat_dir, 'stoat'),
-            (self.pukeko_dir, 'pukeko'),
+            (self.stoat_dir, 'stoat'),
+            # (self.pukeko_dir, 'pukeko'),
             # (self.wallaby_dir, 'wallaby')
         ]
         

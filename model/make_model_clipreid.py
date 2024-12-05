@@ -234,7 +234,8 @@ class PromptLearner(nn.Module):
             ctx_init = "A photo of a X X X X wallaby."
             
         elif dataset_name == "combined_animals":
-            ctx_init = "A photo of a X X X X animal."    
+            # ctx_init = "A photo of a X X X X animal."    
+            ctx_init = "A photo of an animal."    
             
         else:
             raise ValueError(f"Unknown dataset {dataset_name}")  
